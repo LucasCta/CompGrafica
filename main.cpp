@@ -21,6 +21,10 @@ GLUquadric *quadCylinder;
 
 bool textureOn = true;
 
+bool redisplay = false;
+float sitAngle = 0.0;
+float layHeight = 0.0;
+
 float diameterCylinder = 0.3;
 float diameterSphere = 0.4;
 float sizeArm = 4.5;
@@ -43,10 +47,8 @@ float angleHand = 0.0;
 float angleClampZ = 0.0;
 float angleClampY = 0.0;
 
-float angleThighs1 = 90.0;
-float angleShins1 = 90.0;
-float angleThighs2 = 90.0;
-float angleShins2 = 90.0;
+float angleLegs[4] = {90.0, 90.0, 90.0, 90.0};
+float angleBackLegs[4] = {0.0, 0.0, 0.0, 0.0};
 
 // makes the image into a texture, and returns the id of the texture
 GLuint loadTexture(char *filename) {
@@ -149,11 +151,11 @@ void handleKeypress(unsigned char key, int x, int y) {
   }
 }
 
+enum action { nothing, walking, sitting, layingdown };
+int state = nothing;
+int want = nothing;
+
 void walk(float speed) {}
-
-void sit() {}
-
-void laydown() {}
 
 void handleKeypress2(int key, int x, int y) {
   switch (key) {
@@ -166,11 +168,17 @@ void handleKeypress2(int key, int x, int y) {
     glutPostRedisplay();
     break;
   case GLUT_KEY_UP:
-    sit();
+    if (want == sitting)
+      want = nothing;
+    else
+      want = sitting;
     glutPostRedisplay();
     break;
   case GLUT_KEY_DOWN:
-    laydown();
+    if (want == layingdown)
+      want = nothing;
+    else
+      want = layingdown;
     glutPostRedisplay();
     break;
   }
@@ -227,7 +235,9 @@ void drawSphere(float diameter) {
   gluSphere(quadSphere, diameter, 40.0, 40.0);
 }
 
-void drawLeg(float angleThigh, float angleShin) {
+void drawLeg(float angleBackLeg, float angleThigh) {
+
+  glRotatef(angleBackLeg, 0.0f, 1.0f, 0.0f);
 
   // draws the arm
   drawCylinder(diameterCylinder, sizeArm);
@@ -243,7 +253,6 @@ void drawLeg(float angleThigh, float angleShin) {
 
   // move to clamp referential
   glTranslatef(0.0f, 0.0f, sizeForearm + diameterSphere / 5);
-  glRotatef(angleShin, 0.0f, 0.0f, 1.0f);
 
   // draws the clamp sphere
   drawSphere(diameterSphere);
@@ -256,30 +265,30 @@ void drawLegs() {
 
   // draws first leg
   glPushMatrix();
-  glTranslatef(-0.5f, 1.0f, 1.0f);
+  glTranslatef(-0.5f, 1.0f, 1.5f);
   glRotatef(-45, 0.0f, 1.0f, 0.0f);
-  drawLeg(angleThighs1, angleShins1);
+  drawLeg(angleBackLegs[0], angleLegs[0]);
   glPopMatrix();
 
   // draws second leg
   glPushMatrix();
-  glTranslatef(-0.5f, -1.0f, 1.0f);
+  glTranslatef(-0.5f, -1.0f, 1.5f);
   glRotatef(-45, 0.0f, 1.0f, 0.0f);
-  drawLeg(angleThighs2, angleShins2);
+  drawLeg(angleBackLegs[1], angleLegs[1]);
   glPopMatrix();
 
   // draws third leg
   glPushMatrix();
-  glTranslatef(-7.0f, -1.0f, 1.0f);
+  glTranslatef(-7.0f, -1.0f, 1.5f);
   glRotatef(-45, 0.0f, 1.0f, 0.0f);
-  drawLeg(angleThighs1, angleShins1);
+  drawLeg(angleBackLegs[2], angleLegs[2]);
   glPopMatrix();
 
   // draws fourth leg
   glPushMatrix();
-  glTranslatef(-7.0f, 1.0f, 1.0f);
+  glTranslatef(-7.0f, 1.0f, 1.5f);
   glRotatef(-45, 0.0f, 1.0f, 0.0f);
-  drawLeg(angleThighs2, angleShins2);
+  drawLeg(angleBackLegs[3], angleLegs[3]);
   glPopMatrix();
 }
 
@@ -400,6 +409,75 @@ void drawScene(void) {
   // translate forward
   glTranslatef(0.0f, 3.5f, 0.0f);
 
+  switch (state) {
+  case nothing:
+    if (want != nothing) {
+      state = want;
+      redisplay = true;
+    }
+    break;
+  case sitting:
+    if (want == sitting) {
+      if (sitAngle <= 30) {
+        sitAngle += 1;
+        for (int i = 0; i < 2; i++) {
+          angleBackLegs[i] += 0.2f;
+          angleLegs[i] -= 1.3f;
+        }
+        for (int i = 2; i < 4; i++) {
+          angleBackLegs[i] -= 1;
+          angleLegs[i] += 1.7f;
+        }
+      }
+    } else {
+      if (fabs(sitAngle) < 0.1)
+        state = nothing;
+      else {
+        sitAngle -= 1;
+        for (int i = 0; i < 2; i++) {
+          angleBackLegs[i] -= 0.2f;
+          angleLegs[i] += 1.3f;
+        }
+        for (int i = 2; i < 4; i++) {
+          angleBackLegs[i] += 1;
+          angleLegs[i] -= 1.7f;
+        }
+      }
+    }
+    glRotatef(sitAngle, 1.0f, 0.0f, 0.0f);
+    redisplay = true;
+    break;
+  case walking:
+    break;
+  case layingdown:
+    if (want == layingdown) {
+      if (layHeight <= 2) {
+        layHeight += 0.1f;
+        for (int i = 0; i < 4; i++) {
+          angleBackLegs[i] -= 1;
+          angleLegs[i] += 3.5f;
+        }
+      }
+      if (angleForearm < 120)
+        angleForearm += 0.5f;
+    } else {
+      if (fabs(layHeight) < 0.1)
+        state = nothing;
+      else {
+        layHeight -= 0.1f;
+        for (int i = 0; i < 4; i++) {
+          angleBackLegs[i] += 1;
+          angleLegs[i] -= 3.5f;
+        }
+        if (angleForearm > 90)
+          angleForearm -= 5;
+      }
+    }
+    glTranslatef(0.0f, 0.0f, -layHeight);
+    redisplay = true;
+    break;
+  }
+
   // drawsArm
   glPushMatrix();
   drawArm();
@@ -416,6 +494,10 @@ void drawScene(void) {
 
   glPopMatrix();
   glutSwapBuffers();
+
+  if (redisplay)
+    glutPostRedisplay();
+  redisplay = false;
 }
 
 int main(int argc, char **argv) {
