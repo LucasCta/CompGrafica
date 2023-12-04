@@ -42,6 +42,11 @@ float angleHand = 0.0;
 float angleClampZ = 0.0;
 float angleClampY = 0.0;
 
+float angleThighs1 = 90.0;
+float angleShins1 = 90.0;
+float angleThighs2 = 90.0;
+float angleShins2 = 90.0;
+
 // makes the image into a texture, and returns the id of the texture
 GLuint loadTexture(char *filename) {
   GLuint textureId;
@@ -81,7 +86,7 @@ void handleKeypress(unsigned char key, int x, int y) {
       viewAngleZ += 3;
     glutPostRedisplay();
     break;
-  case 'z': // Decrease view angle z axis
+  case 's': // Decrease view angle z axis
     if (viewAngleZ > 0)
       viewAngleZ -= 3;
     glutPostRedisplay();
@@ -91,7 +96,7 @@ void handleKeypress(unsigned char key, int x, int y) {
       viewAngleX -= 3;
     glutPostRedisplay();
     break;
-  case 's': // Increase view angle x axis
+  case 'd': // Increase view angle x axis
     if (viewAngleX < 180)
       viewAngleX += 3;
     glutPostRedisplay();
@@ -130,6 +135,33 @@ void handleKeypress(unsigned char key, int x, int y) {
   case '6': // Decrease clamp angle y axis
     if (angleClampY > 0)
       angleClampY -= 3;
+    glutPostRedisplay();
+    break;
+  }
+}
+
+void walk(float speed) {}
+
+void sit() {}
+
+void laydown() {}
+
+void handleKeypress2(int key, int x, int y) {
+  switch (key) {
+  case GLUT_KEY_RIGHT:
+    walk(1.0);
+    glutPostRedisplay();
+    break;
+  case GLUT_KEY_LEFT:
+    walk(-1.0);
+    glutPostRedisplay();
+    break;
+  case GLUT_KEY_UP:
+    sit();
+    glutPostRedisplay();
+    break;
+  case GLUT_KEY_DOWN:
+    laydown();
     glutPostRedisplay();
     break;
   }
@@ -186,29 +218,65 @@ void drawSphere(float diameter) {
   gluSphere(quadSphere, diameter, 40.0, 40.0);
 }
 
-void drawScene(void) {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void drawLeg(float angleThigh, float angleShin) {
 
-  glEnable(GL_TEXTURE_2D);
+  // draws the arm
+  drawCylinder(diameterCylinder, sizeArm);
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  eyeX = eyeDistance * cos(viewAngleZ * PI / 180) * cos(viewAngleX * PI / 180);
-  eyeY = eyeDistance * cos(viewAngleZ * PI / 180) * sin(viewAngleX * PI / 180);
-  eyeZ = eyeDistance * sin(viewAngleZ * PI / 180);
-  if (viewAngleZ < 90)
-    gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-  else
-    gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
+  // move to forearm referential
+  glTranslatef(0.0f, 0.0f, sizeArm + diameterSphere / 5);
+  glRotatef(angleThigh, 0.0f, 1.0f, 0.0f);
 
-  // drawing color glColor3f(1.0f, 1.0f, 1.0f);
+  // draws the forearm
+  drawSphere(diameterSphere);
+  glTranslatef(0.0f, 0.0f, diameterSphere / 5);
+  drawCylinder(diameterCylinder, sizeForearm);
 
-  // draws the base
-  drawCylinder(diameterBase, heightBase);
-  glTranslatef(0.0f, 0.0f, heightBase);
-  drawDisk(diameterCylinder, diameterBase);
+  // move to clamp referential
+  glTranslatef(0.0f, 0.0f, sizeForearm + diameterSphere / 5);
+  glRotatef(angleShin, 0.0f, 0.0f, 1.0f);
 
+  // draws the clamp sphere
+  drawSphere(diameterSphere);
+}
+
+void drawLegs() {
+  // legs referential
+  glRotatef(90, 1.0f, 0.0f, 0.0f);
+  glRotatef(270, 0.0f, 0.0f, 1.0f);
+
+  // draws first leg
+  glPushMatrix();
+  glTranslatef(-0.5f, 1.0f, 1.0f);
+  glRotatef(-45, 0.0f, 1.0f, 0.0f);
+  drawLeg(angleThighs1, angleShins1);
+  glPopMatrix();
+
+  // draws second leg
+  glPushMatrix();
+  glTranslatef(-0.5f, -1.0f, 1.0f);
+  glRotatef(-45, 0.0f, 1.0f, 0.0f);
+  drawLeg(angleThighs2, angleShins2);
+  glPopMatrix();
+
+  // draws third leg
+  glPushMatrix();
+  glTranslatef(-7.0f, -1.0f, 1.0f);
+  glRotatef(-45, 0.0f, 1.0f, 0.0f);
+  drawLeg(angleThighs1, angleShins1);
+  glPopMatrix();
+
+  // draws fourth leg
+  glPushMatrix();
+  glTranslatef(-7.0f, 1.0f, 1.0f);
+  glRotatef(-45, 0.0f, 1.0f, 0.0f);
+  drawLeg(angleThighs2, angleShins2);
+  glPopMatrix();
+}
+
+void drawArm() {
   // move to arm referential
+  glTranslatef(0.0f, 0.3f, 0.0f);
   glRotatef(angleArm, 0.0f, 0.0f, 1.0f);
 
   // draws the arm
@@ -231,9 +299,10 @@ void drawScene(void) {
   drawSphere(diameterSphere);
   glTranslatef(0.0f, 0.0f, diameterSphere / 2);
 
+  glRotatef(120, 0.0f, 0.0f, 1.0f);
+
   glPushMatrix();
 
-  // draws top part of clamp
   glRotatef(angleClampY + 60, 0.0f, 1.0f, 0.0f);
 
   drawCylinder(diameterCylinder / 3, sizeClampPart);
@@ -252,9 +321,11 @@ void drawScene(void) {
   drawCone(diameterCylinder / 3, sizeClampPart);
 
   glPopMatrix();
+
+  glRotatef(300, 0.0f, 0.0f, 1.0f);
+
   glPushMatrix();
 
-  // draws bottom part of clamp
   glRotatef(-angleClampY - 60, 0.0f, 1.0f, 0.0f);
 
   drawCylinder(diameterCylinder / 3, sizeClampPart);
@@ -274,6 +345,67 @@ void drawScene(void) {
 
   glPopMatrix();
 
+  glRotatef(120, 0.0f, 0.0f, 1.0f);
+
+  glPushMatrix();
+
+  glRotatef(-angleClampY - 60, 0.0f, 1.0f, 0.0f);
+
+  drawCylinder(diameterCylinder / 3, sizeClampPart);
+  glTranslatef(0.0f, 0.0f, sizeClampPart + diameterSphere / 15);
+  drawSphere(diameterSphere / 3);
+
+  glTranslatef(0.0f, 0.0f, diameterSphere / 15);
+  glRotatef(60, 0.0f, 1.0f, 0.0f);
+
+  drawCylinder(diameterCylinder / 3, sizeClampPart);
+  glTranslatef(0.0f, 0.0f, sizeClampPart + diameterSphere / 15);
+  drawSphere(diameterSphere / 3);
+
+  glTranslatef(0.0f, 0.0f, diameterSphere / 15);
+  glRotatef(60, 0.0f, 1.0f, 0.0f);
+  drawCone(diameterCylinder / 3, sizeClampPart);
+
+  glPopMatrix();
+}
+
+void drawScene(void) {
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glEnable(GL_TEXTURE_2D);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  eyeX = eyeDistance * cos(viewAngleZ * PI / 180) * cos(viewAngleX * PI / 180);
+  eyeY = eyeDistance * cos(viewAngleZ * PI / 180) * sin(viewAngleX * PI / 180);
+  eyeZ = eyeDistance * sin(viewAngleZ * PI / 180);
+  if (viewAngleZ < 90)
+    gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+  else
+    gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
+
+  // drawing color
+  glColor3f(1.0f, 0.0f, 0.0f);
+
+  // translate forward
+  glTranslatef(0.0f, 3.5f, 0.0f);
+
+  // drawsArm
+  glPushMatrix();
+  drawArm();
+  glPopMatrix();
+
+  // draws dogs body and legs
+  glPushMatrix();
+  glTranslatef(0.0f, 1.0f, 0.0f);
+  glRotatef(90, 1.0f, 0.0f, 0.0f);
+  drawDisk(0.0f, diameterBase);
+  drawCylinder(diameterBase, 10);
+  drawLegs();
+  glPopMatrix();
+
+  glPopMatrix();
   glutSwapBuffers();
 }
 
@@ -286,6 +418,7 @@ int main(int argc, char **argv) {
   initRendering();
   glutDisplayFunc(drawScene);
   glutKeyboardFunc(handleKeypress);
+  glutSpecialFunc(handleKeypress2);
   glutReshapeFunc(handleResize);
 
   glutMainLoop();

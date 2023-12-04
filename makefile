@@ -5,3 +5,4 @@ rgb:
 
 main:
 	g++ main.cpp rgb.o -o dog -lglut -lGLU -lGL
+	./dog
