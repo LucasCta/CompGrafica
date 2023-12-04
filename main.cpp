@@ -10,7 +10,8 @@
 
 using namespace std;
 
-char *filenameTexMetal1 = "./metalTexture1.bmp";
+// char *filenameTexMetal1 = "./metalTexture1.bmp";
+char *filenameTexMetal1 = "./metal10.bmp";
 
 GLuint _textureIdMetal1;
 GLuint _textureIdSphere;
@@ -99,6 +100,14 @@ void handleKeypress(unsigned char key, int x, int y) {
   case 'd': // Increase view angle x axis
     if (viewAngleX < 180)
       viewAngleX += 3;
+    glutPostRedisplay();
+    break;
+  case 'q': // Increase view angle x axis
+    eyeDistance -= 1.0;
+    glutPostRedisplay();
+    break;
+  case 'e': // Increase view angle x axis
+    eyeDistance += 1.0;
     glutPostRedisplay();
     break;
   case 't': // Use texture or not
@@ -386,7 +395,7 @@ void drawScene(void) {
     gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
 
   // drawing color
-  glColor3f(1.0f, 0.0f, 0.0f);
+  glColor3f(1.0f, 0.6f, 0.0f);
 
   // translate forward
   glTranslatef(0.0f, 3.5f, 0.0f);
