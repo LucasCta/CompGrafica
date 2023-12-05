@@ -24,6 +24,9 @@ bool textureOn = true;
 bool redisplay = false;
 float sitAngle = 0.0;
 float layHeight = 0.0;
+int walkCycle = 0;
+int walkStart = 0;
+int walkEnd = false;
 
 float diameterCylinder = 0.3;
 float diameterSphere = 0.4;
@@ -155,16 +158,17 @@ enum action { nothing, walking, sitting, layingdown };
 int state = nothing;
 int want = nothing;
 
-void walk(float speed) {}
-
 void handleKeypress2(int key, int x, int y) {
   switch (key) {
   case GLUT_KEY_RIGHT:
-    walk(1.0);
+    if (want == walking)
+      want = nothing;
+    else
+      want = walking;
     glutPostRedisplay();
     break;
   case GLUT_KEY_LEFT:
-    walk(-1.0);
+    want = nothing;
     glutPostRedisplay();
     break;
   case GLUT_KEY_UP:
@@ -413,6 +417,8 @@ void drawScene(void) {
   case nothing:
     if (want != nothing) {
       state = want;
+      if (state == walking)
+        walkStart = 0;
       redisplay = true;
     }
     break;
@@ -448,6 +454,68 @@ void drawScene(void) {
     redisplay = true;
     break;
   case walking:
+    if (!walkEnd) {
+      if (walkStart < 20) {
+        angleBackLegs[1] -= 0.5f;
+        angleBackLegs[3] -= 0.5f;
+        angleLegs[1] += 2.0f;
+        angleLegs[3] += 2.0f;
+        walkStart++;
+      }
+      if (walkCycle < 20) {
+        angleBackLegs[0] -= 1;
+        angleBackLegs[2] -= 1;
+        angleLegs[0] -= 1.5f;
+        angleLegs[2] -= 1.5f;
+      } else if (walkCycle < 40) {
+        angleBackLegs[0] += 0.5;
+        angleBackLegs[2] += 0.5;
+        angleLegs[0] += 3.5f;
+        angleLegs[2] += 3.5f;
+      } else if (walkCycle < 60) {
+        angleBackLegs[0] += 2;
+        angleBackLegs[2] += 2;
+        angleLegs[0] -= 2.0f;
+        angleLegs[2] -= 2.0f;
+      } else if (walkCycle < 80) {
+        angleBackLegs[0] -= 1.5f;
+        angleBackLegs[2] -= 1.5f;
+      }
+      if (walkCycle < 20) {
+        angleBackLegs[1] += 2;
+        angleBackLegs[3] += 2;
+        angleLegs[1] -= 2.0f;
+        angleLegs[3] -= 2.0f;
+      } else if (walkCycle < 40) {
+        angleBackLegs[1] -= 1.5f;
+        angleBackLegs[3] -= 1.5f;
+      } else if (walkCycle < 60) {
+        angleBackLegs[1] -= 1;
+        angleBackLegs[3] -= 1;
+        angleLegs[1] -= 1.5f;
+        angleLegs[3] -= 1.5f;
+      } else if (walkCycle < 80) {
+        angleBackLegs[1] += 0.5;
+        angleBackLegs[3] += 0.5;
+        angleLegs[1] += 3.5f;
+        angleLegs[3] += 3.5f;
+      }
+      if (++walkCycle == 80) {
+        walkCycle = 0;
+        if (want != walking)
+          walkEnd = true;
+      }
+    } else {
+      angleBackLegs[1] += 0.5f;
+      angleBackLegs[3] += 0.5f;
+      angleLegs[1] -= 2.0f;
+      angleLegs[3] -= 2.0f;
+      if (--walkStart == 0) {
+        state = nothing;
+        walkEnd = false;
+      }
+    }
+    redisplay = true;
     break;
   case layingdown:
     if (want == layingdown) {
