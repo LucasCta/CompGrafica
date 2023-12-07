@@ -121,10 +121,6 @@ void handleKeypress(unsigned char key, int x, int y) {
       eyeDistance -= 1.0;
     glutPostRedisplay();
     break;
-  case 't': // Use texture or not
-    textureOn = !textureOn;
-    glutPostRedisplay();
-    break;
   case '1': // Increase arm angle
     angleArm += 3;
     if (angleArm >= 360)
