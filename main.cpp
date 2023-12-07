@@ -414,9 +414,9 @@ void drawFloor() {
 
 void drawScene(void) {
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0.0f, 0.8f, 1.0f, 1.0f);
 
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glEnable(GL_TEXTURE_2D);
 
@@ -433,11 +433,11 @@ void drawScene(void) {
   // grass color
   glColor3f(0.0f, 1.0f, 0.0f);
 
-  /* LUZ, (MATERIAIS, NORMAIS e TEXTURAS -> Robô, chão e céu) */
-  GLfloat luzAmbiente[4] = {0.2, 0.2, 0.2, 1.0};
-  GLfloat luzDifusa[4] = {0.7, 0.7, 0.7, 1.0};
-  GLfloat luzEspecular[4] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat posicaoLuz[4] = {100.0, 0.0, 0.0, 0.0};
+  // Iluminação
+  GLfloat luzAmbiente[4] = {0.3, 0.3, 0.2, 10.0};
+  GLfloat luzDifusa[4] = {0.7, 0.7, 11.7, 1.0};
+  GLfloat luzEspecular[4] = {1.0, 2.0, 2.0, 1.0};
+  GLfloat posicaoLuz[4] = {80.0, 0.0, 60.0, 0.0};
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, luzAmbiente);
   glLightfv(GL_LIGHT0, GL_AMBIENT, luzAmbiente);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, luzDifusa);
@@ -453,7 +453,7 @@ void drawScene(void) {
   glMaterialfv(GL_FRONT, GL_SPECULAR, especularidade);
 
   // desenha o chão
-  glMateriali(GL_FRONT, GL_SHININESS, 1);
+  glMateriali(GL_FRONT, GL_SHININESS, 4);
   glTranslatef(0.0f, -walkDistance, 0.0f);
   drawFloor();
   glTranslatef(0.0f, walkDistance, 0.0f);
@@ -482,10 +482,10 @@ void drawScene(void) {
         sitAngle += 1;
         for (int i = 0; i < 2; i++) {
           angleBackLegs[i] += 0.2f;
-          angleLegs[i] -= 1.3f;
+          angleLegs[i] -= 1;
         }
         for (int i = 2; i < 4; i++) {
-          angleBackLegs[i] -= 1;
+          angleBackLegs[i] -= 1.2f;
           angleLegs[i] += 1.7f;
         }
       }
@@ -496,10 +496,10 @@ void drawScene(void) {
         sitAngle -= 1;
         for (int i = 0; i < 2; i++) {
           angleBackLegs[i] -= 0.2f;
-          angleLegs[i] += 1.3f;
+          angleLegs[i] += 1;
         }
         for (int i = 2; i < 4; i++) {
-          angleBackLegs[i] += 1;
+          angleBackLegs[i] += 1.2f;
           angleLegs[i] -= 1.7f;
         }
       }
@@ -509,6 +509,8 @@ void drawScene(void) {
     break;
   case walking:
     walkDistance += 0.1f;
+    if (walkDistance > 70)
+      walkDistance = 0;
     if (!walkEnd) {
       if (walkStart < 20) {
         angleBackLegs[1] -= 0.5f;
