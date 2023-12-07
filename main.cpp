@@ -111,12 +111,14 @@ void handleKeypress(unsigned char key, int x, int y) {
       viewAngleX += 3;
     glutPostRedisplay();
     break;
-  case 'q': // Increase view angle x axis
-    eyeDistance -= 1.0;
+  case 'q':
+    if (eyeDistance < 30)
+      eyeDistance += 1.0;
     glutPostRedisplay();
     break;
-  case 'e': // Increase view angle x axis
-    eyeDistance += 1.0;
+  case 'e':
+    if (eyeDistance > 10)
+      eyeDistance -= 1.0;
     glutPostRedisplay();
     break;
   case 't': // Use texture or not
@@ -196,7 +198,7 @@ void handleResize(int w, int h) {
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(60.0, (float)w / (float)h, 1.0, 50.0);
+  gluPerspective(60.0, (float)w / (float)h, 1.0, 100.0);
 }
 
 void drawCylinder(float diameter, float lenght) {
