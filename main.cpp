@@ -402,15 +402,15 @@ void drawFloor() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBegin(GL_QUADS);
-  glNormal3f(0.0, 0.0, -1.0);
+  glNormal3f(0.0, 0.0, 1.0);
   glTexCoord2f(0.0f, 0.0f);
-  glVertex3f(-100.0f, -100.0f, -7.5f);
+  glVertex3f(-150.0f, -150.0f, -7.5f);
   glTexCoord2f(1.0f, 0.0f);
-  glVertex3f(100.0f, -100.0f, -7.5f);
+  glVertex3f(150.0f, -150.0f, -7.5f);
   glTexCoord2f(1.0f, 1.0f);
-  glVertex3f(100.0f, 100.0f, -7.5f);
+  glVertex3f(150.0f, 150.0f, -7.5f);
   glTexCoord2f(0.0f, 1.0f);
-  glVertex3f(-100.0f, 100.0f, -7.5f);
+  glVertex3f(-150.0f, 150.0f, -7.5f);
   glEnd();
 }
 
@@ -455,7 +455,7 @@ void drawScene(void) {
   glMaterialfv(GL_FRONT, GL_SPECULAR, especularidade);
 
   // desenha o chão
-  glMateriali(GL_FRONT, GL_SHININESS, 4);
+  glMateriali(GL_FRONT, GL_SHININESS, 1);
   glTranslatef(0.0f, -walkDistance, 0.0f);
   drawFloor();
   glTranslatef(0.0f, walkDistance, 0.0f);
