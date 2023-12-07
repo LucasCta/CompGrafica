@@ -12,10 +12,12 @@ using namespace std;
 
 // char *filenameTexMetal1 = "./metalTexture1.bmp";
 char *filenameTexMetal1 = "./metal10.bmp";
+char *filenameTexGrass1 = "./tgrass.bmp";
 
 GLuint _textureIdMetal1;
 GLuint _textureIdSphere;
 GLuint _textureIdCylinder;
+GLuint _textureIdGrass;
 GLUquadric *quadSphere;
 GLUquadric *quadCylinder;
 
@@ -27,6 +29,7 @@ float layHeight = 0.0;
 int walkCycle = 0;
 int walkStart = 0;
 int walkEnd = false;
+float walkDistance = 0;
 
 float diameterCylinder = 0.3;
 float diameterSphere = 0.4;
@@ -78,6 +81,7 @@ GLuint loadTexture(char *filename) {
 void initRendering(void) {
   quadSphere = gluNewQuadric();
   quadCylinder = gluNewQuadric();
+  _textureIdGrass = loadTexture(filenameTexGrass1);
   _textureIdMetal1 = loadTexture(filenameTexMetal1);
   _textureIdCylinder = _textureIdMetal1;
   _textureIdSphere = _textureIdMetal1;
@@ -391,9 +395,28 @@ void drawArm() {
   glPopMatrix();
 }
 
+void drawFloor() {
+  glBindTexture(GL_TEXTURE_2D, _textureIdGrass);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glBegin(GL_QUADS);
+  glNormal3f(0.0, 0.0, -1.0);
+  glTexCoord2f(0.0f, 0.0f);
+  glVertex3f(-100.0f, -100.0f, -7.5f);
+  glTexCoord2f(1.0f, 0.0f);
+  glVertex3f(100.0f, -100.0f, -7.5f);
+  glTexCoord2f(1.0f, 1.0f);
+  glVertex3f(100.0f, 100.0f, -7.5f);
+  glTexCoord2f(0.0f, 1.0f);
+  glVertex3f(-100.0f, 100.0f, -7.5f);
+  glEnd();
+}
+
 void drawScene(void) {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   glEnable(GL_TEXTURE_2D);
 
@@ -407,11 +430,42 @@ void drawScene(void) {
   else
     gluLookAt(eyeX, eyeY, eyeZ, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
 
-  // drawing color
-  glColor3f(1.0f, 0.6f, 0.0f);
+  // grass color
+  glColor3f(0.0f, 1.0f, 0.0f);
+
+  /* LUZ, (MATERIAIS, NORMAIS e TEXTURAS -> Robô, chão e céu) */
+  GLfloat luzAmbiente[4] = {0.2, 0.2, 0.2, 1.0};
+  GLfloat luzDifusa[4] = {0.7, 0.7, 0.7, 1.0};
+  GLfloat luzEspecular[4] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat posicaoLuz[4] = {100.0, 0.0, 0.0, 0.0};
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, luzAmbiente);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, luzAmbiente);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, luzDifusa);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, luzEspecular);
+  glLightfv(GL_LIGHT0, GL_POSITION, posicaoLuz);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_COLOR_MATERIAL);
+  glShadeModel(GL_SMOOTH);
+
+  GLfloat especularidade[4] = {1.0, 1.0, 1.0, 1.0};
+  glMaterialfv(GL_FRONT, GL_SPECULAR, especularidade);
+
+  // desenha o chão
+  glMateriali(GL_FRONT, GL_SHININESS, 1);
+  glTranslatef(0.0f, -walkDistance, 0.0f);
+  drawFloor();
+  glTranslatef(0.0f, walkDistance, 0.0f);
+
+  // aumenta o brilho para desenhar o robo
+  glMateriali(GL_FRONT, GL_SHININESS, 15);
 
   // translate forward
   glTranslatef(0.0f, 3.5f, 0.0f);
+
+  // robot color
+  glColor3f(1.0f, 0.6f, 0.0f);
 
   switch (state) {
   case nothing:
@@ -454,6 +508,7 @@ void drawScene(void) {
     redisplay = true;
     break;
   case walking:
+    walkDistance += 0.1f;
     if (!walkEnd) {
       if (walkStart < 20) {
         angleBackLegs[1] -= 0.5f;
@@ -520,28 +575,28 @@ void drawScene(void) {
   case layingdown:
     if (want == layingdown) {
       if (layHeight <= 2) {
-        layHeight += 0.1f;
+        layHeight += 0.05f;
         for (int i = 0; i < 4; i++) {
-          angleBackLegs[i] -= 1;
-          angleLegs[i] += 3.5f;
+          angleBackLegs[i] -= 0.5f;
+          angleLegs[i] += 1.75f;
         }
       }
       if (angleForearm < 120)
-        angleForearm += 0.5f;
+        angleForearm += 0.25f;
     } else {
       if (fabs(layHeight) < 0.1)
         state = nothing;
       else {
-        layHeight -= 0.1f;
+        layHeight -= 0.05f;
         for (int i = 0; i < 4; i++) {
-          angleBackLegs[i] += 1;
-          angleLegs[i] -= 3.5f;
+          angleBackLegs[i] += 0.5f;
+          angleLegs[i] -= 1.75f;
         }
         if (angleForearm > 90)
-          angleForearm -= 5;
+          angleForearm -= 1;
       }
     }
-    glTranslatef(0.0f, 0.0f, -layHeight);
+    glTranslatef(0.0f, 0.0f, -layHeight * 2);
     redisplay = true;
     break;
   }
@@ -556,6 +611,12 @@ void drawScene(void) {
   glTranslatef(0.0f, 1.0f, 0.0f);
   glRotatef(90, 1.0f, 0.0f, 0.0f);
   drawDisk(0.0f, diameterBase);
+  // ajustando as normais
+  glPushMatrix();
+  glTranslatef(0.0f, 0.0f, 10.0f);
+  glRotatef(180, 0.0f, 1.0f, 0.0f);
+  drawDisk(0.0f, diameterBase);
+  glPopMatrix();
   drawCylinder(diameterBase, 10);
   drawLegs();
   glPopMatrix();
@@ -572,7 +633,7 @@ int main(int argc, char **argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutInitWindowSize(800, 800);
-  glutCreateWindow("Garra");
+  glutCreateWindow("Robo Garra");
 
   initRendering();
   glutDisplayFunc(drawScene);
